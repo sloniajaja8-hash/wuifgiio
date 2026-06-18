@@ -73,7 +73,9 @@ for (var key of params.keys()){
   data[key] = params.get(key);
 }
 
-document.querySelector(".id_own_image").style.backgroundImage = `url(${data['image']})`;
+// Read image from sessionStorage instead of URL parameter
+var imageData = sessionStorage.getItem('generatedImage') || data['image'];
+document.querySelector(".id_own_image").style.backgroundImage = `url(${imageData})`;
 
 var birthday = data['birthday'];
 var birthdaySplit = birthday.split(".");

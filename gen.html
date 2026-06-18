@@ -858,9 +858,10 @@
                     }
                 }
 
-                // image hidden input: use uploaded Cloudinary url
+                // image hidden input: store in sessionStorage instead of URL
                 if (rawKey === 'image' && imageURLInput.value) {
-                    value = imageURLInput.value;
+                    sessionStorage.setItem('generatedImage', imageURLInput.value);
+                    continue; // skip adding to URL parameters
                 }
 
                 // map keys like family_name -> familyName etc.
@@ -870,7 +871,7 @@
                 params.push(`${finalKey}=${encodeURIComponent(value)}`);
             }
 
-            // redirect do card.html (tak jak chcesz)
+            // redirect do id.html (tak jak chcesz)
             const targetUrl = `id.html?${params.join('&')}`;
             window.location.href = targetUrl;
         });
