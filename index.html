@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Sprawdzenie Tokenu</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg,#1a1a1a,#111);
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      min-height: 100vh;
+      margin: 0;
+      padding-top: 80px;
+    }
+    h1 {
+      font-size: 2.5em;
+      margin-bottom: 30px;
+      color: #e0e0e0;
+      text-shadow: 0 0 10px #6a00d4;
+    }
+    #status {
+      font-size: 1.8em;
+      padding: 20px 30px;
+      border-radius: 12px;
+      background: #222;
+      box-shadow: 0 0 20px rgba(106,0,212,0.5);
+      min-width: 350px;
+      text-align: center;
+      transition: all 0.3s ease;
+    }
+    .ok {
+      color: #0f0;
+      font-weight: bold;
+      text-shadow: 0 0 10px #0f0;
+    }
+    .fail {
+      color: #f33;
+      font-weight: bold;
+      text-shadow: 0 0 10px #f33;
+    }
+  </style>
+</head>
+<body>
+  <h1>Sprawdzenie tokenu</h1>
+  <div id="status">Ładowanie...</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
+import { getDatabase, ref, get, update } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyC7jjcojlIoiXXflxpUT5ncu33jDF7p60k",
+  authDomain: "bywatel-eb940.firebaseapp.com",
+  databaseURL: "https://bywatel-eb940-default-rtdb.firebaseio.com",
+  projectId: "bywatel-eb940",
+  storageBucket: "bywatel-eb940.firebasestorage.app",
+  messagingSenderId: "648437385966",
+  appId: "1:648437385966:web:96a58994f12d4d8c4f81ff",
+  measurementId: "G-0505X7DVGH"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+const statusEl = document.getElementById("status");
+const params = new URLSearchParams(window.location.search);
+const token = params.get("token");
+
+if (!token) {
+  statusEl.innerHTML = '<span class="fail">Brak tokenu w linku!</span>';
+} else {
+  const tokenRef = ref(db, "tokens/" + token);
+  get(tokenRef).then(snapshot => {
+    const data = snapshot.val();
+    if (!snapshot.exists()) {
+      statusEl.innerHTML = '<span class="fail">Token nie istnieje ❌</span>';
+    } else if (data.used === true) {
+      statusEl.innerHTML = '<span class="fail">Token już użyty ❌</span>';
+    } else {
+      update(tokenRef, { used: true }).then(() => {
+        statusEl.innerHTML = '<span class="ok">Token poprawny ✅ Przekierowanie...</span>';
+        setTimeout(() => {
+          window.location.href = "przekierowanie.html";
+        }, 1000);
+      }).catch(err => {
+        console.error(err);
+        statusEl.innerHTML = '<span class="fail">Błąd przy oznaczaniu tokenu ❌</span>';
+      });
+    }
+  }).catch(err => {
+    console.error(err);
+    statusEl.innerHTML = '<span class="fail">Błąd przy sprawdzaniu tokenu ❌</span>';
+  });
+}
+</script>
+</body>
+</html>
