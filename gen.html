@@ -553,10 +553,9 @@
 
     <script>
         // =========================================================
-        //    	       KONFIGURACJA CLOUDINARY - ZMIEŃ TO!
+        //    	       KONFIGURACJA - ZDJĘCIA LOKALNE (BASE64)
         // =========================================================
-        const CLOUD_NAME = 'dofho41ku';           // <--- ZMIEŃ NA SWÓJ KLUCZ
-        const UPLOAD_PRESET = 'eobywatel'; // <--- ZMIEŃ NA SWÓJ KLUCZ
+        // Zdjęcia są konwertowane lokalnie na base64 - bez chmury
         // =========================================================
         
         const form = document.getElementById('dataGenerator');
@@ -752,47 +751,34 @@
             }
         });
 
-        async function uploadToCloudinary(file) {
-            if (CLOUD_NAME.startsWith('TWÓJ') || UPLOAD_PRESET.startsWith('TWÓJ')) {
-                statusMessage.style.color = 'var(--error-red)';
-                statusMessage.textContent = 'BŁĄD: Zmień CLOUD_NAME i UPLOAD_PRESET w kodzie JS!';
-                return null;
-            }
-
+        async function convertToBase64(file) {
             statusMessage.style.color = 'var(--text-light)';
-            statusMessage.textContent = 'Ładowanie zdjęcia na Cloudinary... ⏳';
+            statusMessage.textContent = 'Konwertowanie zdjęcia... ⏳';
             generateButton.disabled = true;
 
-            const formData = new FormData();
-            formData.append('file', file);
-            formData.append('upload_preset', UPLOAD_PRESET); 
-
-            try {
-                const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
-                    method: 'POST',
-                    body: formData
-                });
-
-                const data = await response.json();
-
-                if (data.url) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
                     statusMessage.style.color = 'var(--success-green)';
                     statusMessage.textContent = 'Zdjęcie załadowane pomyślnie! ✅';
-                    return data.url; 
-                } else {
+                    resolve(e.target.result);
+                };
+                reader.onerror = function(error) {
                     statusMessage.style.color = 'var(--error-red)';
-                    statusMessage.textContent = 'Błąd Cloudinary: ' + (data.error && data.error.message ? data.error.message : 'Nieznany błąd.');
-                    console.error('Błąd Cloudinary:', data);
-                    return null;
-                }
-            } catch (error) {
-                statusMessage.style.color = 'var(--error-red)';
-                statusMessage.textContent = 'Błąd sieci/API. Sprawdź połączenie i poprawność kluczy Cloudinary.';
-                console.error('Błąd Fetch:', error);
-                return null;
-            } finally {
-                generateButton.disabled = false;
-            }
+                    statusMessage.textContent = 'Błąd przy konwertowaniu zdjęcia!';
+                    console.error('Błąd FileReader:', error);
+                    reject(error);
+                };
+                reader.onabort = function() {
+                    statusMessage.style.color = 'var(--error-red)';
+                    statusMessage.textContent = 'Konwersja anulowana!';
+                    reject(new Error('Konwersja anulowana'));
+                };
+                reader.onloadend = function() {
+                    generateButton.disabled = false;
+                };
+                reader.readAsDataURL(file);
+            });
         }
 
         // =========================================================
@@ -828,9 +814,9 @@
                 return;
             }
 
-            // 2. Przesyłanie zdjęcia (jeśli nie ma linku)
+            // 2. Konwersja zdjęcia na base64 (jeśli nie ma linku)
             if (imageURLInput.value === '') {
-                const imageUrl = await uploadToCloudinary(fileInput.files[0]);
+                const imageUrl = await convertToBase64(fileInput.files[0]);
                 
                 if (!imageUrl) {
                     return; 
