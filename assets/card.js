@@ -73,9 +73,16 @@ for (var key of params.keys()){
   data[key] = params.get(key);
 }
 
-// Read image from localStorage instead of URL parameter (persists on iOS home screen)
-var imageData = localStorage.getItem('generatedImage') || data['image'];
-document.querySelector(".id_own_image").style.backgroundImage = `url(${imageData})`;
+// Read image from localStorage first, fallback to URL parameter
+var imageData = localStorage.getItem('generatedImage');
+if (!imageData && data['image']) {
+    imageData = data['image'];
+}
+if (imageData) {
+    document.querySelector(".id_own_image").style.backgroundImage = `url(${imageData})`;
+} else {
+    console.error('No image found in localStorage or URL parameters');
+}
 
 var birthday = data['birthday'];
 var birthdaySplit = birthday.split(".");
