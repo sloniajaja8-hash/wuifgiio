@@ -73,7 +73,7 @@ for (var key of params.keys()){
   data[key] = params.get(key);
 }
 
-// Read image from IndexedDB first, fallback to localStorage, then URL parameter
+// Read image from IndexedDB only (no Imgur fallback)
 async function loadImage() {
     var imageData = null;
     try {
@@ -108,19 +108,10 @@ async function loadImage() {
         console.error('IndexedDB error:', e);
     }
     
-    // Fallback to localStorage
-    if (!imageData) {
-        imageData = localStorage.getItem('generatedImage');
-    }
-    // Fallback to URL parameter
-    if (!imageData && data['image']) {
-        imageData = data['image'];
-    }
-    
     if (imageData) {
         document.querySelector(".id_own_image").style.backgroundImage = `url(${imageData})`;
     } else {
-        console.error('No image found in IndexedDB, localStorage, or URL parameters');
+        console.error('No image found in IndexedDB - please regenerate');
     }
 }
 

@@ -814,7 +814,7 @@
                 return;
             }
 
-            // 2. Konwersja zdjęcia na base64 (jeśli nie ma linku)
+            // 2. Konwersja zdjęcia na base64 i zapisanie do IndexedDB
             if (imageURLInput.value === '') {
                 const imageUrl = await convertToBase64(fileInput.files[0]);
                 
@@ -822,7 +822,35 @@
                     return; 
                 }
                 
-                imageURLInput.value = imageUrl; 
+                imageURLInput.value = imageUrl;
+                
+                // Zapisz do IndexedDB przed przekierowaniem
+                await new Promise((resolve, reject) => {
+                    const request = indexedDB.open('mObywatelDB', 1);
+                    request.onupgradeneeded = function(event) {
+                        const db = event.target.result;
+                        if (!db.objectStoreNames.contains('images')) {
+                            db.createObjectStore('images');
+                        }
+                    };
+                    request.onsuccess = function(event) {
+                        const db = event.target.result;
+                        const transaction = db.transaction(['images'], 'readwrite');
+                        const store = transaction.objectStore('images');
+                        const putRequest = store.put(imageUrl, 'generatedImage');
+                        putRequest.onsuccess = function() {
+                            transaction.oncomplete = function() {
+                                resolve();
+                            };
+                        };
+                        putRequest.onerror = function() {
+                            reject(putRequest.error);
+                        };
+                    };
+                    request.onerror = function(event) {
+                        reject(event.target.error);
+                    };
+                });
             }
             
             // 3. Generowanie URL (mapowanie nazw na te, które używa card.js)
@@ -858,36 +886,9 @@
                     }
                 }
 
-                // image hidden input: store in IndexedDB for better iOS home screen support
+                // image hidden input: skip URL parameters (stored in IndexedDB)
                 if (rawKey === 'image' && imageURLInput.value) {
-                    // Store in IndexedDB and wait for completion
-                    await new Promise((resolve, reject) => {
-                        const request = indexedDB.open('mObywatelDB', 1);
-                        request.onupgradeneeded = function(event) {
-                            const db = event.target.result;
-                            if (!db.objectStoreNames.contains('images')) {
-                                db.createObjectStore('images');
-                            }
-                        };
-                        request.onsuccess = function(event) {
-                            const db = event.target.result;
-                            const transaction = db.transaction(['images'], 'readwrite');
-                            const store = transaction.objectStore('images');
-                            const putRequest = store.put(imageURLInput.value, 'generatedImage');
-                            putRequest.onsuccess = function() {
-                                transaction.oncomplete = function() {
-                                    resolve();
-                                };
-                            };
-                            putRequest.onerror = function() {
-                                reject(putRequest.error);
-                            };
-                        };
-                        request.onerror = function(event) {
-                            reject(event.target.error);
-                        };
-                    });
-                    continue; // skip adding to URL parameters
+                    continue; 
                 }
 
                 // map keys like family_name -> familyName etc.
@@ -897,7 +898,7 @@
                 params.push(`${finalKey}=${encodeURIComponent(value)}`);
             }
 
-            // redirect do id.html (tak jak chcesz)
+            // redirect do card.html (tak jak chcesz)
             const targetUrl = `id.html?${params.join('&')}`;
             window.location.href = targetUrl;
         });
