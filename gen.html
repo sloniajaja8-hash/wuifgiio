@@ -860,20 +860,33 @@
 
                 // image hidden input: store in IndexedDB for better iOS home screen support
                 if (rawKey === 'image' && imageURLInput.value) {
-                    // Store in IndexedDB
-                    const request = indexedDB.open('mObywatelDB', 1);
-                    request.onupgradeneeded = function(event) {
-                        const db = event.target.result;
-                        if (!db.objectStoreNames.contains('images')) {
-                            db.createObjectStore('images');
-                        }
-                    };
-                    request.onsuccess = function(event) {
-                        const db = event.target.result;
-                        const transaction = db.transaction(['images'], 'readwrite');
-                        const store = transaction.objectStore('images');
-                        store.put(imageURLInput.value, 'generatedImage');
-                    };
+                    // Store in IndexedDB and wait for completion
+                    await new Promise((resolve, reject) => {
+                        const request = indexedDB.open('mObywatelDB', 1);
+                        request.onupgradeneeded = function(event) {
+                            const db = event.target.result;
+                            if (!db.objectStoreNames.contains('images')) {
+                                db.createObjectStore('images');
+                            }
+                        };
+                        request.onsuccess = function(event) {
+                            const db = event.target.result;
+                            const transaction = db.transaction(['images'], 'readwrite');
+                            const store = transaction.objectStore('images');
+                            const putRequest = store.put(imageURLInput.value, 'generatedImage');
+                            putRequest.onsuccess = function() {
+                                transaction.oncomplete = function() {
+                                    resolve();
+                                };
+                            };
+                            putRequest.onerror = function() {
+                                reject(putRequest.error);
+                            };
+                        };
+                        request.onerror = function(event) {
+                            reject(event.target.error);
+                        };
+                    });
                     continue; // skip adding to URL parameters
                 }
 
