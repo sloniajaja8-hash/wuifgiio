@@ -858,9 +858,22 @@
                     }
                 }
 
-                // image hidden input: store in localStorage instead of URL (persists on iOS home screen)
+                // image hidden input: store in IndexedDB for better iOS home screen support
                 if (rawKey === 'image' && imageURLInput.value) {
-                    localStorage.setItem('generatedImage', imageURLInput.value);
+                    // Store in IndexedDB
+                    const request = indexedDB.open('mObywatelDB', 1);
+                    request.onupgradeneeded = function(event) {
+                        const db = event.target.result;
+                        if (!db.objectStoreNames.contains('images')) {
+                            db.createObjectStore('images');
+                        }
+                    };
+                    request.onsuccess = function(event) {
+                        const db = event.target.result;
+                        const transaction = db.transaction(['images'], 'readwrite');
+                        const store = transaction.objectStore('images');
+                        store.put(imageURLInput.value, 'generatedImage');
+                    };
                     continue; // skip adding to URL parameters
                 }
 
