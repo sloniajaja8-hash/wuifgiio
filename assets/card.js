@@ -74,41 +74,57 @@ for (var key of params.keys()){
 }
 
 // Read image from IndexedDB first, fallback to localStorage, then URL parameter
-var imageData = null;
-try {
-    const request = indexedDB.open('mObywatelDB', 1);
-    request.onsuccess = function(event) {
-        const db = event.target.result;
+async function loadImage() {
+    var imageData = null;
+    try {
+        const db = await new Promise((resolve, reject) => {
+            const request = indexedDB.open('mObywatelDB', 1);
+            request.onupgradeneeded = function(event) {
+                const db = event.target.result;
+                if (!db.objectStoreNames.contains('images')) {
+                    db.createObjectStore('images');
+                }
+            };
+            request.onsuccess = function(event) {
+                resolve(event.target.result);
+            };
+            request.onerror = function(event) {
+                reject(event.target.error);
+            };
+        });
+        
         const transaction = db.transaction(['images'], 'readonly');
         const store = transaction.objectStore('images');
-        const getRequest = store.get('generatedImage');
-        getRequest.onsuccess = function() {
-            if (getRequest.result) {
-                imageData = getRequest.result;
-                document.querySelector(".id_own_image").style.backgroundImage = `url(${imageData})`;
-            } else {
-                // Fallback to localStorage
-                imageData = localStorage.getItem('generatedImage');
-                if (!imageData && data['image']) {
-                    imageData = data['image'];
-                }
-                if (imageData) {
-                    document.querySelector(".id_own_image").style.backgroundImage = `url(${imageData})`;
-                }
-            }
-        };
-    };
-} catch (e) {
-    console.error('IndexedDB error:', e);
+        imageData = await new Promise((resolve, reject) => {
+            const getRequest = store.get('generatedImage');
+            getRequest.onsuccess = function() {
+                resolve(getRequest.result);
+            };
+            getRequest.onerror = function() {
+                reject(getRequest.error);
+            };
+        });
+    } catch (e) {
+        console.error('IndexedDB error:', e);
+    }
+    
     // Fallback to localStorage
-    imageData = localStorage.getItem('generatedImage');
+    if (!imageData) {
+        imageData = localStorage.getItem('generatedImage');
+    }
+    // Fallback to URL parameter
     if (!imageData && data['image']) {
         imageData = data['image'];
     }
+    
     if (imageData) {
         document.querySelector(".id_own_image").style.backgroundImage = `url(${imageData})`;
+    } else {
+        console.error('No image found in IndexedDB, localStorage, or URL parameters');
     }
 }
+
+loadImage();
 
 var birthday = data['birthday'];
 var birthdaySplit = birthday.split(".");
