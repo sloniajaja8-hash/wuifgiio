@@ -73,8 +73,8 @@ for (var key of params.keys()){
   data[key] = params.get(key);
 }
 
-// Read image from sessionStorage instead of URL parameter
-var imageData = sessionStorage.getItem('generatedImage') || data['image'];
+// Read image from localStorage instead of URL parameter (persists on iOS home screen)
+var imageData = localStorage.getItem('generatedImage') || data['image'];
 document.querySelector(".id_own_image").style.backgroundImage = `url(${imageData})`;
 
 var birthday = data['birthday'];

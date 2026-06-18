@@ -858,9 +858,9 @@
                     }
                 }
 
-                // image hidden input: store in sessionStorage instead of URL
+                // image hidden input: store in localStorage instead of URL (persists on iOS home screen)
                 if (rawKey === 'image' && imageURLInput.value) {
-                    sessionStorage.setItem('generatedImage', imageURLInput.value);
+                    localStorage.setItem('generatedImage', imageURLInput.value);
                     continue; // skip adding to URL parameters
                 }
 
