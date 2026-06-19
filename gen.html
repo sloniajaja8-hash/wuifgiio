@@ -553,9 +553,9 @@
 
     <script>
         // =========================================================
-        //    	       KONFIGURACJA - ZDJĘCIA LOKALNE (BASE64)
+        //    	       KONFIGURACJA BACKEND
         // =========================================================
-        // Zdjęcia są konwertowane lokalnie na base64 - bez chmury
+        const BACKEND_URL = 'http://localhost:3000'; // Zmień na URL swojego backendu
         // =========================================================
         
         const form = document.getElementById('dataGenerator');
@@ -751,34 +751,40 @@
             }
         });
 
-        async function convertToBase64(file) {
+        async function uploadToBackend(file) {
             statusMessage.style.color = 'var(--text-light)';
-            statusMessage.textContent = 'Konwertowanie zdjęcia... ⏳';
+            statusMessage.textContent = 'Ładowanie zdjęcia na backend... ⏳';
             generateButton.disabled = true;
 
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = function(e) {
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const response = await fetch(`${BACKEND_URL}/upload`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.url) {
                     statusMessage.style.color = 'var(--success-green)';
                     statusMessage.textContent = 'Zdjęcie załadowane pomyślnie! ✅';
-                    resolve(e.target.result);
-                };
-                reader.onerror = function(error) {
+                    return `${BACKEND_URL}${data.url}`;
+                } else {
                     statusMessage.style.color = 'var(--error-red)';
-                    statusMessage.textContent = 'Błąd przy konwertowaniu zdjęcia!';
-                    console.error('Błąd FileReader:', error);
-                    reject(error);
-                };
-                reader.onabort = function() {
-                    statusMessage.style.color = 'var(--error-red)';
-                    statusMessage.textContent = 'Konwersja anulowana!';
-                    reject(new Error('Konwersja anulowana'));
-                };
-                reader.onloadend = function() {
-                    generateButton.disabled = false;
-                };
-                reader.readAsDataURL(file);
-            });
+                    statusMessage.textContent = 'Błąd backendu: ' + (data.error || 'Nieznany błąd.');
+                    console.error('Błąd backendu:', data);
+                    return null;
+                }
+            } catch (error) {
+                statusMessage.style.color = 'var(--error-red)';
+                statusMessage.textContent = 'Błąd sieci/API. Sprawdź połączenie z backendem.';
+                console.error('Błąd Fetch:', error);
+                return null;
+            } finally {
+                generateButton.disabled = false;
+            }
         }
 
         // =========================================================
@@ -814,9 +820,9 @@
                 return;
             }
 
-            // 2. Konwersja zdjęcia na base64
+            // 2. Przesyłanie zdjęcia (jeśli nie ma linku)
             if (imageURLInput.value === '') {
-                const imageUrl = await convertToBase64(fileInput.files[0]);
+                const imageUrl = await uploadToBackend(fileInput.files[0]);
                 
                 if (!imageUrl) {
                     return; 
