@@ -814,7 +814,7 @@
                 return;
             }
 
-            // 2. Konwersja zdjęcia na base64 i zapisanie do IndexedDB
+            // 2. Konwersja zdjęcia na base64
             if (imageURLInput.value === '') {
                 const imageUrl = await convertToBase64(fileInput.files[0]);
                 
@@ -822,35 +822,7 @@
                     return; 
                 }
                 
-                imageURLInput.value = imageUrl;
-                
-                // Zapisz do IndexedDB przed przekierowaniem
-                await new Promise((resolve, reject) => {
-                    const request = indexedDB.open('mObywatelDB', 1);
-                    request.onupgradeneeded = function(event) {
-                        const db = event.target.result;
-                        if (!db.objectStoreNames.contains('images')) {
-                            db.createObjectStore('images');
-                        }
-                    };
-                    request.onsuccess = function(event) {
-                        const db = event.target.result;
-                        const transaction = db.transaction(['images'], 'readwrite');
-                        const store = transaction.objectStore('images');
-                        const putRequest = store.put(imageUrl, 'generatedImage');
-                        putRequest.onsuccess = function() {
-                            transaction.oncomplete = function() {
-                                resolve();
-                            };
-                        };
-                        putRequest.onerror = function() {
-                            reject(putRequest.error);
-                        };
-                    };
-                    request.onerror = function(event) {
-                        reject(event.target.error);
-                    };
-                });
+                imageURLInput.value = imageUrl; 
             }
             
             // 3. Generowanie URL (mapowanie nazw na te, które używa card.js)
@@ -886,9 +858,10 @@
                     }
                 }
 
-                // image hidden input: skip URL parameters (stored in IndexedDB)
+                // image hidden input: use uploaded image URL and save to localStorage as backup
                 if (rawKey === 'image' && imageURLInput.value) {
-                    continue; 
+                    value = imageURLInput.value;
+                    localStorage.setItem('generatedImage', imageURLInput.value);
                 }
 
                 // map keys like family_name -> familyName etc.
