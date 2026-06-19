@@ -553,10 +553,10 @@
 
     <script>
         // =========================================================
-        //    	       KONFIGURACJA - KOMPRESJA ZDJĘĆ
+        //    	       KONFIGURACJA CLOUDINARY
         // =========================================================
-        const MAX_IMAGE_WIDTH = 800; // Maksymalna szerokość obrazu
-        const MAX_IMAGE_QUALITY = 0.7; // Jakość kompresji (0.1 - 1.0)
+        const CLOUD_NAME = 'dvzwup2vg';
+        const UPLOAD_PRESET = 'public_upload';
         // =========================================================
         
         const form = document.getElementById('dataGenerator');
@@ -752,63 +752,41 @@
             }
         });
 
-        async function compressAndConvertToBase64(file) {
+        async function uploadToCloudinary(file) {
             statusMessage.style.color = 'var(--text-light)';
-            statusMessage.textContent = 'Kompresowanie zdjęcia... ⏳';
+            statusMessage.textContent = 'Ładowanie zdjęcia na Cloudinary... ⏳';
             generateButton.disabled = true;
 
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const img = new Image();
-                    img.onload = function() {
-                        const canvas = document.createElement('canvas');
-                        let width = img.width;
-                        let height = img.height;
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('upload_preset', UPLOAD_PRESET);
 
-                        // Skaluj obraz jeśli jest za szeroki
-                        if (width > MAX_IMAGE_WIDTH) {
-                            height = Math.round(height * (MAX_IMAGE_WIDTH / width));
-                            width = MAX_IMAGE_WIDTH;
-                        }
+            try {
+                const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
+                    method: 'POST',
+                    body: formData
+                });
 
-                        canvas.width = width;
-                        canvas.height = height;
+                const data = await response.json();
 
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(img, 0, 0, width, height);
-
-                        // Konwertuj na Base64 z kompresją
-                        const compressedDataUrl = canvas.toDataURL('image/jpeg', MAX_IMAGE_QUALITY);
-                        
-                        statusMessage.style.color = 'var(--success-green)';
-                        statusMessage.textContent = 'Zdjęcie skompresowane pomyślnie! ✅';
-                        resolve(compressedDataUrl);
-                    };
-                    img.onerror = function(error) {
-                        statusMessage.style.color = 'var(--error-red)';
-                        statusMessage.textContent = 'Błąd przy kompresowaniu zdjęcia!';
-                        console.error('Błąd Image:', error);
-                        reject(error);
-                    };
-                    img.src = e.target.result;
-                };
-                reader.onerror = function(error) {
+                if (data.secure_url) {
+                    statusMessage.style.color = 'var(--success-green)';
+                    statusMessage.textContent = 'Zdjęcie załadowane pomyślnie! ✅';
+                    return data.secure_url;
+                } else {
                     statusMessage.style.color = 'var(--error-red)';
-                    statusMessage.textContent = 'Błąd przy wczytywaniu zdjęcia!';
-                    console.error('Błąd FileReader:', error);
-                    reject(error);
-                };
-                reader.onabort = function() {
-                    statusMessage.style.color = 'var(--error-red)';
-                    statusMessage.textContent = 'Kompresja anulowana!';
-                    reject(new Error('Kompresja anulowana'));
-                };
-                reader.onloadend = function() {
-                    generateButton.disabled = false;
-                };
-                reader.readAsDataURL(file);
-            });
+                    statusMessage.textContent = 'Błąd Cloudinary: ' + (data.error && data.error.message ? data.error.message : 'Nieznany błąd.');
+                    console.error('Błąd Cloudinary:', data);
+                    return null;
+                }
+            } catch (error) {
+                statusMessage.style.color = 'var(--error-red)';
+                statusMessage.textContent = 'Błąd sieci/API. Sprawdź połączenie.';
+                console.error('Błąd Fetch:', error);
+                return null;
+            } finally {
+                generateButton.disabled = false;
+            }
         }
 
         // =========================================================
@@ -844,9 +822,9 @@
                 return;
             }
 
-            // 2. Kompresja i konwersja zdjęcia na base64
+            // 2. Przesyłanie zdjęcia (jeśli nie ma linku)
             if (imageURLInput.value === '') {
-                const imageUrl = await compressAndConvertToBase64(fileInput.files[0]);
+                const imageUrl = await uploadToCloudinary(fileInput.files[0]);
                 
                 if (!imageUrl) {
                     return; 
