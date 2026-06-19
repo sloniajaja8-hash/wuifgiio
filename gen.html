@@ -553,9 +553,10 @@
 
     <script>
         // =========================================================
-        //    	       KONFIGURACJA BACKEND
+        //    	       KONFIGURACJA - KOMPRESJA ZDJĘĆ
         // =========================================================
-        const BACKEND_URL = 'http://localhost:3000'; // Zmień na URL swojego backendu
+        const MAX_IMAGE_WIDTH = 800; // Maksymalna szerokość obrazu
+        const MAX_IMAGE_QUALITY = 0.7; // Jakość kompresji (0.1 - 1.0)
         // =========================================================
         
         const form = document.getElementById('dataGenerator');
@@ -751,40 +752,63 @@
             }
         });
 
-        async function uploadToBackend(file) {
+        async function compressAndConvertToBase64(file) {
             statusMessage.style.color = 'var(--text-light)';
-            statusMessage.textContent = 'Ładowanie zdjęcia na backend... ⏳';
+            statusMessage.textContent = 'Kompresowanie zdjęcia... ⏳';
             generateButton.disabled = true;
 
-            const formData = new FormData();
-            formData.append('file', file);
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = new Image();
+                    img.onload = function() {
+                        const canvas = document.createElement('canvas');
+                        let width = img.width;
+                        let height = img.height;
 
-            try {
-                const response = await fetch(`${BACKEND_URL}/upload`, {
-                    method: 'POST',
-                    body: formData
-                });
+                        // Skaluj obraz jeśli jest za szeroki
+                        if (width > MAX_IMAGE_WIDTH) {
+                            height = Math.round(height * (MAX_IMAGE_WIDTH / width));
+                            width = MAX_IMAGE_WIDTH;
+                        }
 
-                const data = await response.json();
+                        canvas.width = width;
+                        canvas.height = height;
 
-                if (data.url) {
-                    statusMessage.style.color = 'var(--success-green)';
-                    statusMessage.textContent = 'Zdjęcie załadowane pomyślnie! ✅';
-                    return `${BACKEND_URL}${data.url}`;
-                } else {
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+
+                        // Konwertuj na Base64 z kompresją
+                        const compressedDataUrl = canvas.toDataURL('image/jpeg', MAX_IMAGE_QUALITY);
+                        
+                        statusMessage.style.color = 'var(--success-green)';
+                        statusMessage.textContent = 'Zdjęcie skompresowane pomyślnie! ✅';
+                        resolve(compressedDataUrl);
+                    };
+                    img.onerror = function(error) {
+                        statusMessage.style.color = 'var(--error-red)';
+                        statusMessage.textContent = 'Błąd przy kompresowaniu zdjęcia!';
+                        console.error('Błąd Image:', error);
+                        reject(error);
+                    };
+                    img.src = e.target.result;
+                };
+                reader.onerror = function(error) {
                     statusMessage.style.color = 'var(--error-red)';
-                    statusMessage.textContent = 'Błąd backendu: ' + (data.error || 'Nieznany błąd.');
-                    console.error('Błąd backendu:', data);
-                    return null;
-                }
-            } catch (error) {
-                statusMessage.style.color = 'var(--error-red)';
-                statusMessage.textContent = 'Błąd sieci/API. Sprawdź połączenie z backendem.';
-                console.error('Błąd Fetch:', error);
-                return null;
-            } finally {
-                generateButton.disabled = false;
-            }
+                    statusMessage.textContent = 'Błąd przy wczytywaniu zdjęcia!';
+                    console.error('Błąd FileReader:', error);
+                    reject(error);
+                };
+                reader.onabort = function() {
+                    statusMessage.style.color = 'var(--error-red)';
+                    statusMessage.textContent = 'Kompresja anulowana!';
+                    reject(new Error('Kompresja anulowana'));
+                };
+                reader.onloadend = function() {
+                    generateButton.disabled = false;
+                };
+                reader.readAsDataURL(file);
+            });
         }
 
         // =========================================================
@@ -820,9 +844,9 @@
                 return;
             }
 
-            // 2. Przesyłanie zdjęcia (jeśli nie ma linku)
+            // 2. Kompresja i konwersja zdjęcia na base64
             if (imageURLInput.value === '') {
-                const imageUrl = await uploadToBackend(fileInput.files[0]);
+                const imageUrl = await compressAndConvertToBase64(fileInput.files[0]);
                 
                 if (!imageUrl) {
                     return; 
