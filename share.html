@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <title>mObywatel - Dane</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <link rel="stylesheet" href="assetsdiff/main.css">
+    <link rel="icon" type="image/x-icon" href="assets/images/mc.svg">
+    <link rel="apple-touch-icon" href="assets/images/mc.svg">
+    <link rel="shortcut icon" href="assets/images/mc.svg">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="viewport" content="width=device-width, initial-scale=0.8, user-scalable=no">
+    <meta name="mobile-web-app-capable" content="yes">
+</head>
+<body>
+    <div class="top_grid_fixed">
+        <div class="action_grid_fixed">
+            <img src="showqr_files/back_blue.png" class="back_img" onclick="sendTo('qr')">
+            <p onclick="sendTo('qr')" class="back_text">Wróć</p>
+        </div>
+        <p class="title_text_fixed">Dane osoby</p>
+        <img src="https://i.imgur.com/VHNv1TC.png" class="help_img">
+    </div>
+
+    <div class="container">
+        <div class="data-card">
+            <div class="data-header">
+                <div class="photo-placeholder">
+                    <svg width="80" height="80" viewBox="0 0 80 80">
+                        <circle cx="40" cy="30" r="20" fill="#ddd"/>
+                        <ellipse cx="40" cy="70" rx="30" ry="20" fill="#ddd"/>
+                    </svg>
+                </div>
+                <div class="data-title">
+                    <h2>Dane drugiej osoby</h2>
+                    <p id="scan-type" class="scan-type"></p>
+                </div>
+            </div>
+
+            <div class="data-content">
+                <div class="data-row">
+                    <span class="data-label">Kod:</span>
+                    <span id="code-value" class="data-value"></span>
+                </div>
+                <div class="data-row">
+                    <span class="data-label">Data skanowania:</span>
+                    <span id="scan-date" class="data-value"></span>
+                </div>
+                <div class="data-row">
+                    <span class="data-label">Status:</span>
+                    <span class="data-value status-verified">Zweryfikowano ✓</span>
+                </div>
+            </div>
+
+            <div class="data-actions">
+                <button class="action-button primary" onclick="sendTo('qr')">Zeskanuj kolejny</button>
+                <button class="action-button secondary" onclick="sendTo('home')">Strona główna</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="bottom_bar">
+        <div class="bottom_bar_grid">
+            <div class="bottom_element_grid" send="home">
+                <div class="bottom_element_image home"></div>
+                <p class="bottom_element_text">Dokumenty</p>
+            </div>
+            <div class="bottom_element_grid" send="services">
+                <div class="bottom_element_image services"></div>
+                <p class="bottom_element_text">Usługi</p>
+            </div>
+            <div class="bottom_element_grid" send="qr">
+                <div class="bottom_element_image qr_open qr"></div>
+                <p class="bottom_element_text open">Kod QR</p>
+            </div>
+            <div class="bottom_element_grid" send="more">
+                <div class="bottom_element_image more"></div>
+                <p class="bottom_element_text">Więcej</p>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .container {
+            width: 100%;
+            padding: 20px;
+            box-sizing: border-box;
+            padding-bottom: 120px;
+            margin-top: 70px;
+            min-height: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .data-card {
+            width: 90%;
+            max-width: 400px;
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .data-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .photo-placeholder {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: #f5f5f5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .data-title h2 {
+            margin: 0 0 5px 0;
+            font-size: 18px;
+            color: #333;
+        }
+
+        .scan-type {
+            margin: 0;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .data-content {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .data-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #f5f5f5;
+        }
+
+        .data-label {
+            font-size: 14px;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .data-value {
+            font-size: 15px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .status-verified {
+            color: #4CAF50;
+        }
+
+        .data-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .action-button {
+            padding: 14px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .action-button.primary {
+            background: #014A93;
+            color: white;
+        }
+
+        .action-button.secondary {
+            background: white;
+            color: #014A93;
+            border: 2px solid #014A93;
+        }
+    </style>
+
+    <script src="assets/bar.js"></script>
+    <script>
+        // Pobierz dane z localStorage
+        const qrCode = localStorage.getItem('qrCode');
+        const code = localStorage.getItem('code');
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const codeValue = document.getElementById('code-value');
+            const scanType = document.getElementById('scan-type');
+            const scanDate = document.getElementById('scan-date');
+
+            if (qrCode) {
+                codeValue.textContent = qrCode;
+                scanType.textContent = 'Zeskanowano kod QR';
+            } else if (code) {
+                codeValue.textContent = code;
+                scanType.textContent = 'Wprowadzono kod ręcznie';
+            } else {
+                codeValue.textContent = 'Brak danych';
+                scanType.textContent = 'Nie znaleziono kodu';
+            }
+
+            // Data skanowania
+            const now = new Date();
+            scanDate.textContent = now.toLocaleString('pl-PL');
+
+            // Wyczyść localStorage po wyświetleniu
+            localStorage.removeItem('qrCode');
+            localStorage.removeItem('code');
+        });
+    </script>
+</body>
+</html>
