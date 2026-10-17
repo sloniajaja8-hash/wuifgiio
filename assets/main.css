@@ -3,7 +3,7 @@
 html{
     scroll-behavior: smooth;
     background: #111218;
-    -webkit-background-origin: border-box;
+    -webkit-background-clip: border-box;
 }
 
 input::-webkit-outer-spin-button,

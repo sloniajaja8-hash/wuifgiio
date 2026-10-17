@@ -8,9 +8,15 @@
     <meta http-equiv="Expires" content="0">
     <link rel="stylesheet" href="assetsdiff/main.css">
     <link rel="stylesheet" href="./scanqr_files/scan.css">
+<<<<<<< HEAD
     <link rel="icon" type="image/x-icon" href="assets/images/mc.svg">
     <link rel="apple-touch-icon" href="assets/images/mc.svg">
     <link rel="shortcut icon" href="assets/images/mc.svg">
+=======
+    <link rel="icon" type="image/x-icon" href="https://i.imgur.com/U7TRg0V.png">
+    <link rel="apple-touch-icon" href="https://i.imgur.com/U7TRg0V.png">
+    <link rel="shortcut icon" href="https://i.imgur.com/U7TRg0V.png">
+>>>>>>> cd7909ca64caff79ab400886fb9c72ccd9844877
     <meta name="format-detection" content="telephone=no">
     <meta name="viewport" content="width=device-width, initial-scale=0.8, user-scalable=no">
     <meta name="mobile-web-app-capable" content="yes">
@@ -19,7 +25,11 @@
 <body>
     <div class="top_grid_fixed">
         <div class="action_grid_fixed">
+<<<<<<< HEAD
             <img src="./scanqr_files/back_blue.png" class="back_img" onclick="sendTo('qr')">
+=======
+            <img src="./scanqr_files/back_blue.png" class="back_img">
+>>>>>>> cd7909ca64caff79ab400886fb9c72ccd9844877
             <p onclick="sendTo('qr')" class="back_text">Kod QR</p>
         </div>
         <p class="title_text_fixed">Zeskanuj kod QR</p>
@@ -37,7 +47,11 @@
                     <span class="warning-close">×</span>
                 </div>
             </div>
+<<<<<<< HEAD
             <div id="reader"></div>
+=======
+            <div id="reader" style="position: relative;"><video muted="true" playsinline="" style="width: 414px; display: block;"></video><canvas id="qr-canvas" width="414" height="563" style="width: 414px; height: 563px; display: none;"></canvas><div style="display: none; position: absolute; top: 0px; z-index: 1; background: rgba(9, 9, 9, 0.46); color: rgb(255, 236, 236); text-align: center; width: 100%;">Scanner paused</div></div>
+>>>>>>> cd7909ca64caff79ab400886fb9c72ccd9844877
             <div class="frame-border">
                 <div class="corner top-left"></div>
                 <div class="corner top-right"></div>
@@ -160,6 +174,7 @@
             return;
         }
 
+<<<<<<< HEAD
         document.addEventListener('DOMContentLoaded', function() {
             let html5QrCode = new Html5Qrcode("reader");
             
@@ -179,6 +194,22 @@
                 console.error("Camera initialization error:", err);
             });
         });
+=======
+        let html5QrCode = new Html5Qrcode("reader");
+        html5QrCode.start(
+            { facingMode: { exact: "environment" } },
+            {
+                fps: 10,
+                videoConstraints: {
+                    width: { ideal: 1920 },
+                    height: { ideal: 1080 },
+                    facingMode: "environment"
+                }
+            },
+            onScanSuccess,
+            onScanFailure
+        );
+>>>>>>> cd7909ca64caff79ab400886fb9c72ccd9844877
 
         document.querySelector('.manual-input').addEventListener('click', () => {
             document.querySelector('.code-input-container').classList.add('active');
